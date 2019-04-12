@@ -12,12 +12,25 @@ extern "C" {
 #include "libswscale/swscale.h"
 }
 
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
+
 #define FFLOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO,"ffmpeg",FORMAT,##__VA_ARGS__);
 #define FFLOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR,"ffmpeg",FORMAT,##__VA_ARGS__);
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_zhangteng_myapplication_MainActivity_FFmpegTest(JNIEnv *env, jobject obj, jstring input,
-                                                         jstring output) {
+Java_com_zhangteng_ffmpegdemo_VideoPlayer_getStringC(JNIEnv *env, jobject jobj) {
+    jclass cls = env->GetObjectClass(jobj);
+    jfieldID fid = env->GetFieldID(cls, "key", "I");
+    jint jstr = env->GetIntField(jobj, fid);
+    printf("c++:%d", jstr);
+    env->SetIntField(jobj, fid, jstr + 1);
+    return jstr;
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_zhangteng_ffmpegdemo_VideoPlayer_FFmpegTest(JNIEnv *env, jobject obj, jstring input,
+                                                     jstring output) {
     //获取输入输出文件名
     const char *inputc = env->GetStringUTFChars((jstring) input, 0);
     const char *outputc = env->GetStringUTFChars((jstring) output, 0);
@@ -109,24 +122,73 @@ Java_com_zhangteng_myapplication_MainActivity_FFmpegTest(JNIEnv *env, jobject ob
     avformat_close_input(&avFormatContext);
     return -1;
 }
-extern "C" JNIEXPORT jint
-Java_com_zhangteng_myapplication_MainActivity_JniCppAdd(JNIEnv *env, jobject obj, jint a, jint b) {
-    int ia = a;
-    int ib = b;
-    printf("==================%d", a + b);
-    return a + b;
-}
-extern "C" JNIEXPORT jint
-Java_com_zhangteng_myapplication_MainActivity_JniCppSub(JNIEnv *env, jobject obj, jint a, jint b) {
-    return a - b;
-}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_zhangteng_ffmpegdemo_VideoPlayer_render(JNIEnv *env, jclass type, jstring input_,
+                                                 jobject surface) {
+    const char *input = env->GetStringUTFChars(input_, 0);
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_zhangteng_myapplication_MainActivity_getStringC(JNIEnv *env, jobject jobj) {
-    jclass cls = env->GetObjectClass(jobj);
-    jfieldID fid = env->GetFieldID(cls, "key", "I");
-    jint jstr = env->GetIntField(jobj, fid);
-    printf("c++:%d", jstr);
-    env->SetIntField(jobj, fid, jstr + 1);
-    return jstr;
+    // TODO
+    //注册组件
+    av_register_all();
+    //打开文件
+    AVFormatContext *avFormatContext = avformat_alloc_context();
+    if (avformat_open_input(&avFormatContext, input, NULL, NULL) != 0) {
+        FFLOGE("%s", "无法打开视频");
+    }
+    //找到流信息
+    if (avformat_find_stream_info(avFormatContext, NULL) < 0) {
+        FFLOGE("%s", "无法解析视频")
+    }
+    //查找视频流
+    int i = 0;
+    int video_stream_idx = -1;
+    for (; i < avFormatContext->nb_streams; ++i) {
+        if (avFormatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            video_stream_idx = i;
+        }
+    }
+    //获取解码器
+    AVCodecContext *avCodecContext = avFormatContext->streams[video_stream_idx]->codec;
+    AVCodec *avCodec = avcodec_find_decoder(avCodecContext->codec_id);
+    if (avCodec == NULL) {
+        FFLOGE("%s", "无法解码")
+    }
+    //打开解码器
+    if (avcodec_open2(avCodecContext, avCodec, NULL) < 0) {
+        FFLOGE("%s", "解码器出错")
+    }
+    //编码数据
+    AVPacket *avPacket;
+    av_init_packet(avPacket);
+    //像素数据
+    AVFrame *avFrame = av_frame_alloc();
+    AVFrame *yuvAVFrame = av_frame_alloc();
+
+    ANativeWindow *aNativeWindow = ANativeWindow_fromSurface(env, surface);
+    ANativeWindow_Buffer *aNativeWindow_buffer;
+    int len, got_frame;
+    int frame_count = 0;
+    while (av_read_frame(avFormatContext, avPacket) >= 0) {
+        //只要视频压缩数据（根据流的索引位置判断）
+        if (avPacket->stream_index == video_stream_idx) {
+            len = avcodec_decode_video2(avCodecContext, avFrame, &got_frame, avPacket);
+            if (len < 0) {
+                FFLOGE("%s", "解码错误");
+            }
+            if (got_frame) {
+                frame_count++;
+                FFLOGE("解码第%d帧", frame_count);
+                ANativeWindow_setBuffersGeometry(aNativeWindow,
+                                                 avCodecContext->width, avCodecContext->height,
+                                                 WINDOW_FORMAT_RGBA_8888);
+                ANativeWindow_lock(aNativeWindow, aNativeWindow_buffer, NULL);
+            }
+        }
+        av_free_packet(avPacket);
+    }
+    av_frame_free(&avFrame);
+    avcodec_close(avCodecContext);
+    avformat_close_input(&avFormatContext);
+    env->ReleaseStringUTFChars(input_, input);
 }
