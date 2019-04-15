@@ -11,9 +11,6 @@ import com.zhangteng.ffmpegdemo.widget.VideoView;
 
 import java.io.File;
 
-import static com.zhangteng.ffmpegdemo.VideoPlayer.FFmpegTest;
-import static com.zhangteng.ffmpegdemo.VideoPlayer.render;
-
 public class MainActivity extends AppCompatActivity {
 
     private VideoView surfaceView;
@@ -29,14 +26,13 @@ public class MainActivity extends AppCompatActivity {
         tv.setText("" + VideoPlayer.getInstance().key);
 
         surfaceView = findViewById(R.id.surfaceview);
-
     }
 
     public void onPlay(View view) {
         File file = new File(Environment.getExternalStorageDirectory(), "aa.mp4");
         if (file.exists()) {
             String input = file.getAbsolutePath();
-            render(input, surfaceView.getHolder().getSurface());
+            VideoPlayer.render(input, surfaceView.getHolder().getSurface());
         }
     }
 
@@ -54,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("file", input);
                         String out = outFile.getAbsolutePath();
                         Log.e("file", out);
-                        FFmpegTest(input, out);
+                        VideoPlayer.FFmpegTest(input, out);
                     } else {
                         Log.e("file", "file no exists :" + file.getAbsolutePath());
                     }

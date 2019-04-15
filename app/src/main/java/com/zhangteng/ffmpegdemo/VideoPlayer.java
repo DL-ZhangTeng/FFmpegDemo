@@ -32,6 +32,7 @@ public class VideoPlayer {
         System.loadLibrary("swresample");
         System.loadLibrary("swscale");
         System.loadLibrary("fdk-aac");
+        System.loadLibrary("yuv");
     }
 
     public int key = 100;

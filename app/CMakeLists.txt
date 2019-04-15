@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.4.1)
 #在Gradle Console输出信息
-#CMAKE_SOURCE_DIR: E:/MyApplication2/app
+#CMAKE_SOURCE_DIR: E:/FFmpegDemo/app
 message("CURRENT_DIR:" ${CMAKE_SOURCE_DIR})
 include_directories(
         ${CMAKE_SOURCE_DIR}/src/main/cpp/include #h文件目录
@@ -59,6 +59,12 @@ add_library(
         SHARED
         IMPORTED
 )
+add_library(
+        yuv
+        SHARED
+        IMPORTED
+)
+
 set_target_properties(
         avcodec
         PROPERTIES IMPORTED_LOCATION
@@ -94,6 +100,11 @@ set_target_properties(
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libfdk-aac.so
 )
+set_target_properties(
+        yuv
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libyuv.so
+)
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
 # default, you only need to specify the name of the public NDK library
@@ -120,6 +131,8 @@ target_link_libraries( # Specifies the target library.
         avutil
         swresample
         swscale
+        yuv
+        android
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})
