@@ -1,5 +1,8 @@
 package com.zhangteng.ffmpegdemo;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.view.Surface;
 
 /**
@@ -8,8 +11,8 @@ import android.view.Surface;
 public class VideoPlayer {
     private static VideoPlayer instance;
 
-    private VideoPlayer() {
-    }
+//    private VideoPlayer() {
+//    }
 
     public static VideoPlayer getInstance() {
         if (instance == null) {
@@ -46,4 +49,32 @@ public class VideoPlayer {
     public static native int FFmpegTest(String input, String output);
 
     public static native void render(String input, Surface surface);
+
+    public native void sound(String input, String output);
+
+    public native void soundAudioTrack(String input, String output);
+
+    /**
+     * 创建一个AudioTrac对象，用于播放
+     *
+     * @return
+     */
+    public AudioTrack createAudioTrack() {
+        int sampleRateInHz = 44100;
+        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        //声道布局
+        int channelConfig = android.media.AudioFormat.CHANNEL_OUT_STEREO;
+
+        int bufferSizeInBytes = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+        AudioTrack audioTrack = new AudioTrack(
+                AudioManager.STREAM_MUSIC,
+                sampleRateInHz, channelConfig,
+                audioFormat,
+                bufferSizeInBytes, AudioTrack.MODE_STREAM);
+        //播放
+        //audioTrack.play();
+        //写入PCM
+        //audioTrack.write(byte[]buffer);
+        return audioTrack;
+    }
 }
