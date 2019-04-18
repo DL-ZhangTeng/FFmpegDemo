@@ -24,6 +24,12 @@ add_library( # Sets the name of the library.
         SHARED
         # Provides a relative path to your source file(s).
         src/main/cpp/ttt.cpp)
+add_library( # Sets the name of the library.
+        dn_player
+        # Sets the library as a shared library.
+        SHARED
+        # Provides a relative path to your source file(s).
+        src/main/cpp/dn_player.cpp)
 add_library(
         avcodec
         SHARED
@@ -124,6 +130,7 @@ find_library( # Sets the name of the path variable.
 
 target_link_libraries( # Specifies the target library.
         ttt
+        dn_player
         fdk-aac
         avcodec
         avfilter

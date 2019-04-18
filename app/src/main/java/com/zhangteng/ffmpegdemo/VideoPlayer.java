@@ -54,6 +54,8 @@ public class VideoPlayer {
 
     public native void soundAudioTrack(String input, String output);
 
+    public native void player(String input, Surface surface);
+
     /**
      * 创建一个AudioTrac对象，用于播放
      *
