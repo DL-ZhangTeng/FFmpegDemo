@@ -28,6 +28,7 @@ public class VideoPlayer {
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("ttt");
+        System.loadLibrary("dn_player");
         System.loadLibrary("avcodec");
         System.loadLibrary("avfilter");
         System.loadLibrary("avformat");

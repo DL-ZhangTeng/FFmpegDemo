@@ -5,19 +5,24 @@
 #include <android/native_window_jni.h>
 #include <android/native_window.h>
 
-#define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO,"jason",FORMAT,##__VA_ARGS__);
-#define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR,"jason",FORMAT,##__VA_ARGS__);
-
-#include "libyuv/libyuv.h"
-
-//封装格式
-#include "libavformat/avformat.h"
-//解码
+extern "C" {
+//编码
 #include "libavcodec/avcodec.h"
-//缩放
+//封装格式处理
+#include "libavformat/avformat.h"
+//像素处理
 #include "libswscale/swscale.h"
 //重采样
 #include "libswresample/swresample.h"
+}
+
+#include "libyuv/libyuv.h"
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
+#include <zconf.h>
+
+#define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO,"jason",FORMAT,##__VA_ARGS__);
+#define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR,"jason",FORMAT,##__VA_ARGS__);
 
 //nb_streams，视频文件中存在，音频流，视频流，字幕
 #define MAX_STREAM 2
